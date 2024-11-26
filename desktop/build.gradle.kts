@@ -4,18 +4,20 @@ plugins {
     kotlin("jvm")
     id("org.jetbrains.compose") version Versions.composeDesktop
     kotlin("plugin.compose")
-    id("com.google.devtools.ksp")
+    //id("com.google.devtools.ksp")
 }
 
-group = "de.appsonair.compose.sksl"
+group = "de.appsonair.compose"
 version = "1.0-SNAPSHOT"
 
 dependencies {
 
+    /*
     val version = "0.3.3-1.7.1"
     implementation("de.drick.compose:hotreload:$version")
     implementation("de.drick.compose:hotreload-ksp-processor:$version")
     ksp("de.drick.compose:hotreload-ksp-processor:$version")
+    */
 
     implementation("com.github.skydoves:colorpicker-compose:1.1.2")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0")
@@ -23,6 +25,7 @@ dependencies {
 
     implementation(compose.desktop.currentOs)
     implementation(compose.desktop.common)
+    implementation(compose.components.resources)
     implementation(compose.material3)
     implementation(compose.materialIconsExtended)
     implementation(compose.runtime)
@@ -37,14 +40,14 @@ kotlin {
 
 compose.desktop {
     application {
-        mainClass = "de.drick.compose.sksl.Shader_testKt"
+        mainClass = "de.drick.compose.shaderpaint.Main_desktop_appKt"
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
-            packageName = "de.drick.compose.sksl"
+            packageName = "de.drick.compose.shaderpaint"
             packageVersion = "1.0.0"
             val iconsRoot = project.file("src/main/resources")
             linux {
-                iconFile.set(iconsRoot.resolve("icon-linux.png"))
+                iconFile.set(iconsRoot.resolve("mango_icon.png"))
             }
         }
     }

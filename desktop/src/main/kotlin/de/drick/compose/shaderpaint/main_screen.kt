@@ -9,26 +9,29 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Circle
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
@@ -38,129 +41,195 @@ import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.PointerInputChange
 import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
-import de.drick.compose.live_composable.HotReload
-import org.intellij.lang.annotations.Language
+import androidx.compose.ui.unit.sp
+import de.drick.compose.shaderpaint.theme.codeStyle
 import org.jetbrains.skia.RuntimeEffect
 import org.jetbrains.skia.RuntimeShaderBuilder
+import kotlin.text.Regex.Companion.fromLiteral
 
-interface Shape {
-    val id: String
-    var position: Offset
-    var radius: Float
-    var smoothness: Float
-    var color: Color
-    fun instance(posVar: String): String
-}
 
-fun Offset.toVector() = "vec2($x, $y)"
+//@HotReload
+@Composable
+fun MainScreen(
+    world: World
+) {
+    var newShapeSelected: Shape? by remember { mutableStateOf(null) }
+    var shapeSelected: Shape? by remember { mutableStateOf(world.shapeList.firstOrNull()) }
 
-fun Float.toShader() = "%.2f".format(this)
-
-fun Color.toVec3() = "vec3(${red.toShader()}, ${green.toShader()}, ${blue.toShader()})"
-
-data class Circle(
-    override val id: String,
-    override var position: Offset,
-    override var radius: Float,
-    override var smoothness: Float = 10f,
-    override var color: Color = Color.White,
-): Shape {
-    companion object {
-        @Language("GLSL")
-        fun shaderDefinition() = """
-            float dCircle(in vec2 p, in float r, in float sharpness) {
-                float d = length(p) - r + sharpness;
-                return smoothstep(sharpness, 0.0, d);
+    val pointerIcon = remember(newShapeSelected) {
+        if (newShapeSelected != null)
+            PointerIcon.Crosshair
+        else
+            PointerIcon.Default
+    }
+    Surface {
+        Column {
+            Row(
+                modifier = Modifier.weight(1f).fillMaxWidth()
+            ) {
+                ShaderPanel(
+                    modifier = Modifier.weight(1f).fillMaxHeight()
+                        .pointerHoverIcon(pointerIcon),
+                    world = world,
+                    onClick = { offset ->
+                        newShapeSelected.let { shape ->
+                            if (shape == null) {
+                                shapeSelected = world.searchShape(offset)
+                                println("Select: $shapeSelected")
+                            } else {
+                                println("Add shape")
+                                shape.position = offset
+                                world.addShape(shape)
+                                newShapeSelected = null
+                                shapeSelected = shape
+                            }
+                        }
+                    }
+                )
+                Column(
+                    modifier = Modifier.padding(16.dp).fillMaxHeight().width(250.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        tonalElevation = 6.dp
+                    ) {
+                        ToolbarView(
+                            modifier = Modifier.padding(8.dp),
+                            world = world,
+                            shapeSelected = shapeSelected,
+                            newShapeSelected = { newShape ->
+                                newShapeSelected = newShape
+                            }
+                        )
+                    }
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        tonalElevation = 6.dp
+                    ) {
+                        LazyColumn(
+                            Modifier.weight(1f),
+                            contentPadding = PaddingValues(8.dp)
+                        ) {
+                            items(world.shapeList) { shape ->
+                                ShapeItem(
+                                    shape = shape,
+                                    isSelected = shape.id == shapeSelected?.id
+                                )
+                            }
+                        }
+                    }
+                }
             }
-        """.replaceIndent()
+            ShaderCodePanel(
+                world = world,
+                modifier = Modifier.height(300.dp).fillMaxWidth()
+            )
+        }
     }
-    override fun instance(posVar: String): String = """
-        dCircle($posVar - ${position.toVector()}, ${radius.toShader()}, ${smoothness.toShader()}) * ${color.toVec3()}
-    """.replaceIndent()
 }
 
-data class Triangle(
-    override val id: String,
-    override var position: Offset,
-    override var radius: Float,
-    override var smoothness: Float = 10f,
-    override var color: Color = Color.White,
-): Shape {
-    companion object {
-        @Language("GLSL")
-        fun shaderDefinition() = """
-            float sdEquilateralTriangle(in vec2 p, in float r, in float sharpness) {
-                const float k = sqrt(3.0);
-                p.x = abs(p.x) - r;
-                p.y = p.y + r/k;
-                if( p.x+k*p.y>0.0 ) p = vec2(p.x-k*p.y,-k*p.x-p.y)/2.0;
-                p.x -= clamp( p.x, -2.0*r, 0.0 );
-                float d = -length(p)*sign(p.y);
-                return smoothstep(sharpness, 0.0, d);
-            }
-        """.replaceIndent()
+@Composable
+fun ShaderCodePanel(
+    world: World,
+    modifier: Modifier = Modifier
+) {
+    val shaderCodeLines = remember(world.frameCounter) {
+        world.generateShader().lines()
     }
-    override fun instance(posVar: String): String = """
-        sdEquilateralTriangle($posVar - ${position.toVector()}, ${radius.toShader()}, ${smoothness.toShader()}) * ${color.toVec3()}
-    """.replaceIndent()
-}
-
-
-
-class World {
-    val shapeList = SnapshotStateList<Shape>()
-        .apply {
-            add(Circle("Circle 1", Offset(100f, 100f), 100f))
-        }
-
-    var frameCounter by mutableStateOf(0)
-        private set
-
-    fun invalidate() {
-        frameCounter++
-    }
-
-    fun addShape(shape: Shape) {
-        shapeList.add(shape)
-        invalidate()
-    }
-
-    @Language("AGSL")
-    private fun mainShader(
-        shapeInstances: List<Shape>
-    ): String {
-        val definitions = buildString {
-            append(Circle.shaderDefinition())
-            append(Triangle.shaderDefinition())
-        }
-        val instances = buildString {
-            shapeInstances.forEach { shape ->
-                append("c += ")
-                append(shape.instance("p"))
-                appendLine(";")
+    LazyColumn(modifier) {
+        itemsIndexed(shaderCodeLines) { index, line ->
+            Row() {
+                LineNumber(
+                    number = index.toString(),
+                    modifier = Modifier.width(40.dp)
+                )
+                Text(
+                    text = codeString(line),
+                    fontSize = 16.sp,
+                    fontFamily = FontFamily.Monospace,
+                    maxLines = 1,
+                    softWrap = false
+                )
             }
         }
-        return """
-            $definitions
-            vec4 main(vec2 fragCoord) {
-                vec2 p = fragCoord;
-                vec3 c = vec3(0.0);
-                $instances
-                return vec4(c, 1);
-            }    
-        """.trimIndent()
     }
-    fun searchShape(offset: Offset): Shape? {
-        return shapeList
-            .map { Pair(it, (it.position - offset).getDistance()) }
-            .filter { it.second < it.first.radius + 20f}
-            .minByOrNull { it.second }
-            ?.first
-    }
-
-    fun generateShader() = mainShader(shapeList)
 }
+
+@Composable
+private fun LineNumber(number: String, modifier: Modifier) =
+    Text(
+        text = number,
+        fontSize = 16.sp,
+        fontFamily = FontFamily.Monospace,
+        color = LocalContentColor.current.copy(alpha = 0.30f),
+        modifier = modifier.padding(start = 12.dp)
+    )
+
+private val punctuationSymbols = listOf(
+    ":", ";", "=",
+    "\"",
+    "[",
+    "]",
+)
+
+private val keywordSymbols = listOf(
+    "float",
+    "vec2",
+    "vec3",
+    "vec4",
+    "in ",
+    "out ",
+    "uniform ",
+    "return"
+)
+
+private val functionSymbols = listOf(
+    "main"
+)
+
+@Composable
+private fun codeString(str: String) = buildAnnotatedString {
+    val codeStyle = MaterialTheme.codeStyle()
+    withStyle(codeStyle.simple) {
+        val strFormatted = str.replace("\t", "    ")
+        append(strFormatted)
+        punctuationSymbols.forEach { symbol ->
+            addStyle(codeStyle.punctuation, strFormatted, symbol)
+        }
+        keywordSymbols.forEach { symbol ->
+            addStyle(codeStyle.keyword, strFormatted, symbol)
+        }
+        functionSymbols.forEach { symbol ->
+            addStyle(codeStyle.function, strFormatted, symbol)
+        }
+        addStyle(codeStyle.value, strFormatted, "true")
+        addStyle(codeStyle.value, strFormatted, "false")
+        addStyle(codeStyle.value, strFormatted, Regex("""(?<!\p{Alpha})[0-9\\.]+"""))
+        addStyle(codeStyle.comment, strFormatted, Regex("^\\s*//.*"))
+
+        // Keeps copied lines separated and fixes crash during selection:
+        // https://partnerissuetracker.corp.google.com/issues/199919707
+        append("\n")
+    }
+}
+
+private fun AnnotatedString.Builder.addStyle(style: SpanStyle, text: String, regexp: String) {
+    addStyle(style, text, fromLiteral(regexp))
+}
+
+private fun AnnotatedString.Builder.addStyle(style: SpanStyle, text: String, regexp: Regex) {
+    for (result in regexp.findAll(text)) {
+        addStyle(style, result.range.first, result.range.last + 1)
+    }
+}
+
 
 @Composable
 fun ShaderPanel(
@@ -172,124 +241,73 @@ fun ShaderPanel(
     val shaderCounter = world.frameCounter
     val effect = remember(shaderCounter) {
         val shaderCode = world.generateShader()
-        println(shaderCode)
         RuntimeEffect.makeForShader(shaderCode)
     }
-    Spacer(
-        modifier = modifier
-            .pointerInput(Unit) {
-                detectTapGestures(onTap = onClick)
-            }
-            .pointerInput(Unit) {
-                var dragPos = Offset.Zero
-                var dragTarget: Shape? = null
-                detectDragGestures(
-                    onDragStart = { offset ->
-                        dragTarget = world.searchShape(offset)
-                        dragPos = offset
-                    },
-                    onDrag = { change: PointerInputChange, dragAmount: Offset ->
-                        dragPos += dragAmount
-                        mouseOffset = dragPos
-                        dragTarget?.let { it.position = dragPos }
-                        world.invalidate()
-                    }
-                )
-            }.drawWithCache {
-                val shader = RuntimeShaderBuilder(effect)
-                    .apply {
-                        //Uniforms
-                    }
-                    .makeShader()
-                val brush = ShaderBrush(shader)
-                onDrawBehind {
-                    drawRect(brush)
+    Spacer(modifier
+        .pointerInput(Unit) {
+            detectTapGestures(onTap = onClick)
+        }
+        .pointerInput(Unit) {
+            var dragPos = Offset.Zero
+            var dragTarget: Shape? = null
+            detectDragGestures(
+                onDragStart = { offset ->
+                    dragTarget = world.searchShape(offset)
+                    dragPos = offset
+                },
+                onDrag = { change: PointerInputChange, dragAmount: Offset ->
+                    dragPos += dragAmount
+                    mouseOffset = dragPos
+                    dragTarget?.let { it.position = dragPos }
+                    world.invalidate()
                 }
+            )
+        }.drawWithCache {
+            val shader = RuntimeShaderBuilder(effect)
+                .apply {
+                    //Uniforms
+                }
+                .makeShader()
+            val brush = ShaderBrush(shader)
+            onDrawBehind {
+                drawRect(brush)
             }
+        }
     )
 }
 
-@HotReload
 @Composable
-fun MainScreen() {
-    val world = remember {
-        World()
-    }
-    var newShapeSelected by remember { mutableStateOf<Shape?>(null) }
-    var shapeSelected by remember { mutableStateOf<Shape?>(world.shapeList.firstOrNull()) }
-
-    var shapeCounter by remember { mutableStateOf(world.shapeList.size) }
-
-    val pointerIcon = remember(newShapeSelected) {
-        if (newShapeSelected != null)
-            PointerIcon.Crosshair
-        else
-            PointerIcon.Default
-    }
-    Row(
-        modifier = Modifier.fillMaxSize(),
-        horizontalArrangement = Arrangement.spacedBy(16.dp)
+fun ToolbarView(
+    world: World,
+    shapeSelected: Shape?,
+    newShapeSelected: (Shape) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        ShaderPanel(
-            modifier = Modifier.weight(1f).fillMaxHeight()
-                .pointerHoverIcon(pointerIcon),
-            world = world,
-            onClick = { offset ->
-                newShapeSelected.let { shape ->
-                    if (shape == null) {
-                        shapeSelected = world.searchShape(offset)
-                        println("Select: $shapeSelected")
-                    } else {
-                        println("Add shape")
-                        shape.position = offset
-                        world.addShape(shape)
-                        newShapeSelected = null
-                    }
-                }
+        Button(
+            onClick = {
+                val currentCount = world.shapeList.filterIsInstance<Circle>().size
+                val id = "Circle ${currentCount + 1}"
+                newShapeSelected(Circle(id, Offset.Zero, 100f, color = Color.Red))
             }
-        )
-        Column(
-            modifier = Modifier.padding(8.dp).fillMaxHeight().width(200.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Column(
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Button(
-                    onClick = {
-                        shapeCounter++
-                        val id = "Circle $shapeCounter"
-                        newShapeSelected = Circle(id, Offset.Zero, 100f, color = Color.Red)
-                    }
-                ) {
-                    Icon(imageVector = Icons.Default.Circle, contentDescription = null)
-                }
-                Button(
-                    onClick = {
-                        shapeCounter++
-                        val id = "Triangle $shapeCounter"
-                        newShapeSelected = Triangle(id, Offset.Zero, 100f)
-                    }
-                ) {
-                    Icon(imageVector = Icons.Default.PlayArrow, contentDescription = null)
-                }
+            Icon(imageVector = Icons.Default.Circle, contentDescription = null)
+        }
+        Button(
+            onClick = {
+                val currentCount = world.shapeList.filterIsInstance<Triangle>().size
+                val id = "Triangle ${currentCount + 1}"
+                newShapeSelected(Triangle(id, Offset.Zero, 100f))
             }
-            shapeSelected?.let {
-                Spacer(modifier = Modifier.height(4.dp).fillMaxWidth().background(Color.Black))
-                ShapeOptionsView(it, onChange = { world.invalidate() })
-            }
+        ) {
+            Icon(imageVector = Icons.Default.PlayArrow, contentDescription = null)
+        }
+        shapeSelected?.let {
             Spacer(modifier = Modifier.height(4.dp).fillMaxWidth().background(Color.Black))
-            LazyColumn(
-                Modifier.weight(1f),
-                contentPadding = PaddingValues(8.dp)
-            ) {
-                items(world.shapeList) { shape ->
-                    ShapeItem(
-                        shape = shape,
-                        isSelected = shape.id == shapeSelected?.id
-                    )
-                }
-            }
+            ShapeOptionsView(it, onChange = { world.invalidate() })
         }
     }
 }
@@ -317,7 +335,7 @@ fun ShapeOptionsView(
     )
     Row {
         Text("radius")
-        var state by remember { mutableStateOf(shape.radius) }
+        var state by remember(shape) { mutableStateOf(shape.radius) }
         Slider(
             value = state,
             onValueChange = {
@@ -330,7 +348,7 @@ fun ShapeOptionsView(
     }
     Row {
         Text("Smoothness")
-        var state by remember { mutableStateOf(shape.smoothness) }
+        var state by remember(shape) { mutableStateOf(shape.smoothness) }
         Slider(
             value = state,
             onValueChange = {

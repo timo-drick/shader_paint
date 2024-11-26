@@ -1,12 +1,16 @@
 package de.drick.compose.shaderpaint
 
-import androidx.compose.material.MaterialTheme
+import androidx.compose.runtime.remember
 import androidx.compose.ui.window.singleWindowApplication
-import de.drick.compose.shaderpaint.de.drick.compose.shaderpaint.MainScreenHotReload
+import de.drick.compose.shaderpaint.de.drick.compose.shaderpaint.MainScreen
+import de.drick.compose.shaderpaint.de.drick.compose.shaderpaint.World
+import de.drick.compose.shaderpaint.theme.AppTheme
 
-fun main() = singleWindowApplication {
-    MaterialTheme {
-        MainScreenHotReload()
+fun main() = singleWindowApplication(
+    title = "Shader PainT"
+) {
+    AppTheme(darkTheme = true) {
+        MainScreen(world = remember { World() })
     }
 }
 
