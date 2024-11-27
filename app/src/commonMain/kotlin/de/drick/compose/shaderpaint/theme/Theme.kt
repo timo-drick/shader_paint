@@ -5,7 +5,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.font.FontStyle
@@ -46,6 +48,24 @@ private val LightColorScheme = lightColorScheme(
     tertiary = darkPrimaryColor,
 )
 
+private val lightCodeStyle = CodeStyle(
+    simple = SpanStyle(Color(0xFF000000)),
+    value = SpanStyle(Color(0xFF4A86E8)),
+    keyword = SpanStyle(Color(0xFF000080)),
+    punctuation = SpanStyle(Color(0xFFA1A1A1)),
+    function = SpanStyle(Color(0xFFBBB529)),
+    comment = SpanStyle(Color(0xFF808080))
+)
+private val darkCodeStyle = CodeStyle(
+    simple = SpanStyle(Color(0xFFA9B7C6)),
+    value = SpanStyle(Color(0xFF6897BB)),
+    keyword = SpanStyle(Color(0xFFCC7832)),
+    punctuation = SpanStyle(Color(0xFFA1C17E)),
+    function = SpanStyle(fontStyle = FontStyle.Italic),
+    comment = SpanStyle(Color(0xFF808080))
+)
+
+
 @Composable
 fun AppTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
@@ -55,12 +75,14 @@ fun AppTheme(
         darkTheme -> DarkColorScheme
         else -> LightColorScheme
     }
-
-    MaterialTheme(
-        colorScheme = colorScheme,
-        typography = Typography,
-        content = content
-    )
+    val codeStyle = if (darkTheme) darkCodeStyle else lightCodeStyle
+    CompositionLocalProvider(LocalCodeStyle provides codeStyle) {
+        MaterialTheme(
+            colorScheme = colorScheme,
+            typography = Typography,
+            content = content
+        )
+    }
 }
 
 @Immutable
@@ -74,21 +96,6 @@ data class CodeStyle(
 )
 
 @Composable
-fun MaterialTheme.codeStyle() = if (isSystemInDarkTheme())
-    CodeStyle(
-        simple = SpanStyle(Color(0xFF000000)),
-        value = SpanStyle(Color(0xFF4A86E8)),
-        keyword = SpanStyle(Color(0xFF000080)),
-        punctuation = SpanStyle(Color(0xFFA1A1A1)),
-        function = SpanStyle(Color(0xFFBBB529)),
-        comment = SpanStyle(Color(0xFF808080))
-    )
-else
-    CodeStyle(
-        simple = SpanStyle(Color(0xFFA9B7C6)),
-        value = SpanStyle(Color(0xFF6897BB)),
-        keyword = SpanStyle(Color(0xFFCC7832)),
-        punctuation = SpanStyle(Color(0xFFA1C17E)),
-        function = SpanStyle(fontStyle = FontStyle.Italic),
-        comment = SpanStyle(Color(0xFF808080))
-    )
+fun MaterialTheme.codeStyle() = LocalCodeStyle.current
+
+val LocalCodeStyle = staticCompositionLocalOf { darkCodeStyle }

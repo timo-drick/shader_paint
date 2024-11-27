@@ -9,7 +9,7 @@ import de.drick.compose.shaderpaint.theme.AppTheme
 fun main() = singleWindowApplication(
     title = "Shader PainT"
 ) {
-    AppTheme(darkTheme = true) {
+    AppTheme {
         MainScreen(world = remember { World() })
     }
 }

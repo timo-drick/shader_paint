@@ -10,7 +10,7 @@ fun main() {
     CanvasBasedWindow(
         canvasElementId = "ComposeTarget"
     ) {
-        AppTheme(darkTheme = true) {
+        AppTheme {
             MainScreen(world = remember { World() })
         }
     }
