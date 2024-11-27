@@ -11,7 +11,7 @@ The generated shader code is rendered using compose multiplatform custom shaders
 
 <img alt="demo.webp" src="demo.webp" width="75%"/>
 
-![shader_paint.mp4](shader_paint.mp4)
+https://github.com/user-attachments/assets/b1841026-5a6c-43f5-9b05-dd15fb7b2f5e
 
 It runs also as wasm, you can see a demo here:
 
