@@ -1,4 +1,4 @@
-package de.drick.compose.shaderpaint.de.drick.compose.shaderpaint
+package de.drick.compose.shaderpaint
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.Orientation
@@ -7,7 +7,7 @@ import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.width
-import androidx.compose.material.MaterialTheme
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -59,7 +59,7 @@ class SplitterState {
 fun VerticalSplitter(
     splitterState: SplitterState,
     onResize: (delta: Dp) -> Unit,
-    color: Color = MaterialTheme.colors.background
+    color: Color = MaterialTheme.colorScheme.background
 ) = Box {
     val density = LocalDensity.current
     Box(

@@ -1,4 +1,4 @@
-package de.drick.compose.shaderpaint.de.drick.compose.shaderpaint
+package de.drick.compose.shaderpaint
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable

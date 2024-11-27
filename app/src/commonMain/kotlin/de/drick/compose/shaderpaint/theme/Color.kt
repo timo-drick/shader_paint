@@ -1,4 +1,4 @@
-package de.drick.compose.sample.theme
+package de.drick.compose.shaderpaint.theme
 
 import androidx.compose.ui.graphics.Color
 

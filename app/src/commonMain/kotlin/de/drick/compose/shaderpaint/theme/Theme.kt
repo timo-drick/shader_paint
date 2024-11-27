@@ -1,7 +1,6 @@
 package de.drick.compose.shaderpaint.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.material.MaterialTheme.colors
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
@@ -10,10 +9,6 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.font.FontStyle
-import de.drick.compose.sample.theme.Pink80
-import de.drick.compose.sample.theme.Purple80
-import de.drick.compose.sample.theme.PurpleGrey80
-import de.drick.compose.sample.theme.Typography
 
 private val lightPrimaryColor = Color(0xFFFAB24A)
 private val darkPrimaryColor = Color(0xFF7D4433)
@@ -79,21 +74,21 @@ data class CodeStyle(
 )
 
 @Composable
-fun MaterialTheme.codeStyle() = if (colors.isLight)
-    CodeStyle(
-        simple = SpanStyle(Color(0xFFA9B7C6)),
-        value = SpanStyle(Color(0xFF6897BB)),
-        keyword = SpanStyle(Color(0xFFCC7832)),
-        punctuation = SpanStyle(Color(0xFFA1C17E)),
-        function = SpanStyle(fontStyle = FontStyle.Italic),
-        comment = SpanStyle(Color(0xFF808080))
-    )
-else
+fun MaterialTheme.codeStyle() = if (isSystemInDarkTheme())
     CodeStyle(
         simple = SpanStyle(Color(0xFF000000)),
         value = SpanStyle(Color(0xFF4A86E8)),
         keyword = SpanStyle(Color(0xFF000080)),
         punctuation = SpanStyle(Color(0xFFA1A1A1)),
         function = SpanStyle(Color(0xFFBBB529)),
+        comment = SpanStyle(Color(0xFF808080))
+    )
+else
+    CodeStyle(
+        simple = SpanStyle(Color(0xFFA9B7C6)),
+        value = SpanStyle(Color(0xFF6897BB)),
+        keyword = SpanStyle(Color(0xFFCC7832)),
+        punctuation = SpanStyle(Color(0xFFA1C17E)),
+        function = SpanStyle(fontStyle = FontStyle.Italic),
         comment = SpanStyle(Color(0xFF808080))
     )

@@ -1,5 +1,7 @@
 plugins {
+    kotlin("multiplatform") version Versions.kotlin apply false
     kotlin("plugin.compose") version Versions.kotlin apply false
+    id("org.jetbrains.compose") version Versions.composeMP apply false
     kotlin("plugin.serialization") version Versions.kotlin
     //id("com.google.devtools.ksp") version "2.0.21-1.0.28"
     id("com.github.ben-manes.versions") version Versions.benManesPlugin

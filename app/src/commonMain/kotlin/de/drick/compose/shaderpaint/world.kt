@@ -1,4 +1,4 @@
-package de.drick.compose.shaderpaint.de.drick.compose.shaderpaint
+package de.drick.compose.shaderpaint
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -6,12 +6,24 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import org.intellij.lang.annotations.Language
+import kotlin.math.pow
+import kotlin.math.roundToInt
 
+fun Offset.toVector() = "vec2(${x.roundTo(3)}, ${y.roundTo(3)})"
 
-fun Offset.toVector() = "vec2($x, $y)"
+fun Float.roundTo(numFractionDigits: Int) =
+    toDouble().roundTo(numFractionDigits)
 
-fun Float.toShader() = "%.2f".format(this)
+fun Double.roundTo(numFractionDigits: Int): String {
+    val factor = 10.0.pow(numFractionDigits.toDouble())
+    val numberTimes = (this * factor).roundToInt()
+    val number = (numberTimes / factor).toInt()
+    val fraction = (numberTimes - (number * factor)).toInt()
+    return "$number.$fraction"
+}
+
+fun Float.toShader() = roundTo(3)
+fun Double.toShader() = roundTo(3)
 
 fun Color.toVec3() = "vec3(${red.toShader()}, ${green.toShader()}, ${blue.toShader()})"
 
@@ -33,7 +45,6 @@ data class Circle(
     override var color: Color = Color.White,
 ): Shape {
     companion object {
-        @Language("GLSL")
         fun shaderDefinition() = """
             float dCircle(in vec2 p, in float r, in float sharpness) {
                 float d = length(p) - r + sharpness;
@@ -54,7 +65,6 @@ data class Triangle(
     override var color: Color = Color.White,
 ): Shape {
     companion object {
-        @Language("GLSL")
         fun shaderDefinition() = """
             float dTriangle(in vec2 p, in float r, in float sharpness) {
                 const float k = sqrt(3.0);
@@ -111,7 +121,6 @@ $instances
         """.trim()
     }
 
-    @Language("AGSL")
     private fun mainShader(
         shapeInstances: List<Shape>
     ): String {
