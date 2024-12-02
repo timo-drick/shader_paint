@@ -2,6 +2,7 @@ package de.drick.compose.hot_preview
 
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -21,7 +22,7 @@ fun PreviewItem(name: String, annotation: HotPreview, image: RenderedImage?) {
         Spacer(Modifier.height(8.dp))
         if (image != null) {
             Image(
-                modifier = Modifier.width(image.size.width).aspectRatio(image.size.width / image.size.height).border(borderStroke),
+                modifier = Modifier.size(image.size).border(borderStroke),
                 bitmap = image.image,
                 contentScale = ContentScale.Fit,
                 contentDescription = "Preview of $name"
@@ -36,11 +37,22 @@ fun PreviewGridPanel(
     hotPreviewList: List<HotPreviewData>
 ) {
     val stateVertical = rememberScrollState()
+    val stateHorizontal = rememberScrollState()
+    val scrollbarPadding = 16.dp
+    val scrollbarStyle = ScrollbarStyle(
+        minimalHeight = 16.dp,
+        thickness = 12.dp,
+        shape = RoundedCornerShape(4.dp),
+        hoverDurationMillis = 300,
+        unhoverColor = MaterialTheme.colorScheme.secondary.copy(alpha = 0.12f),
+        hoverColor = MaterialTheme.colorScheme.secondary.copy(alpha = 0.50f)
+    )
     Box(Modifier.fillMaxSize()) {
         Box(
             Modifier
-                .padding(12.dp)
+                .padding(scrollbarPadding)
                 .verticalScroll(stateVertical)
+                //.horizontalScroll(stateHorizontal)
         ) {
             FlowRow(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -56,13 +68,15 @@ fun PreviewGridPanel(
         VerticalScrollbar(
             modifier = Modifier.align(Alignment.CenterEnd)
                 .fillMaxHeight(),
-            adapter = rememberScrollbarAdapter(stateVertical)
+            adapter = rememberScrollbarAdapter(stateVertical),
+            style = scrollbarStyle
         )
         /*HorizontalScrollbar(
             modifier = Modifier.align(Alignment.BottomStart)
                 .fillMaxWidth()
-                .padding(end = 12.dp),
-            adapter = rememberScrollbarAdapter(stateHorizontal)
+                .padding(end = scrollbarPadding),
+            adapter = rememberScrollbarAdapter(stateHorizontal),
+            style = scrollbarStyle
         )*/
     }
 }

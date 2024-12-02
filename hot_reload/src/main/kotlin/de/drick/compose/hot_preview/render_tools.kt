@@ -70,8 +70,8 @@ fun renderMethod(
                 println("We need to crop the image")
                 image = cropUsingSurface(
                     image = image,
-                    width = realWidth,
-                    height = realHeight,
+                    width = if (widthUndefined) realWidth else renderWidth,
+                    height = if (heightUndefined) realHeight else renderHeight,
                 )
                 println("Cropped image size: ${image.width} x ${image.height}")
             }
