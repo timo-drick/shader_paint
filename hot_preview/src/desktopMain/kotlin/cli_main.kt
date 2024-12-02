@@ -2,7 +2,6 @@ package de.drick.compose.hot_preview
 
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
 import androidx.compose.ui.window.singleWindowApplication
 import de.drick.compose.live_composable.HotPreviewFile
 import de.drick.compose.live_composable.hotReloadPreview
@@ -36,8 +35,7 @@ fun startHotPreview(
     singleWindowApplication(
         title = "Compose Preview"
     ) {
-        val files = initialPreviewList//monitorAnnotations(fileList, initialPreviewList, classLoader)
-        val hotPreviewFile = files.lastOrNull()
+        val hotPreviewFile = initialPreviewList.lastOrNull()
         if (hotPreviewFile != null) {
             val reloadState = hotReloadPreview(
                 hotPreviewFile = hotPreviewFile,
