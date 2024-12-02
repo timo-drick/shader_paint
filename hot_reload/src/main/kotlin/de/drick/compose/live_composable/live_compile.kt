@@ -11,15 +11,16 @@ import de.drick.compose.hot_preview.analyzeClass
 import de.drick.compose.hot_preview.renderMethod
 import de.drick.compose.hotpreview.HotPreview
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.*
 import org.jetbrains.kotlin.cli.common.arguments.K2JVMCompilerArguments
 import org.jetbrains.kotlin.cli.common.messages.MessageRenderer
 import org.jetbrains.kotlin.cli.common.messages.PrintingMessageCollector
 import org.jetbrains.kotlin.cli.jvm.K2JVMCompiler
 import org.jetbrains.kotlin.config.Services
 import java.io.File
+import java.nio.file.FileSystems
+import java.nio.file.Path
+import java.nio.file.StandardWatchEventKinds
 import kotlin.time.measureTime
 import kotlin.time.measureTimedValue
 
@@ -155,22 +156,67 @@ fun hotReloadCompile(
     val compiler = remember {
         K2JVMCompiler()
     }
-    val fileChangeCounter = fileMonitor(fileList)
-    LaunchedEffect(fileChangeCounter, compilerArgs) {
-        withContext(Dispatchers.Default) {
-            try {
-                val compileTime = measureTime {
-                    compiler.exec(messageCollector, Services.EMPTY, compilerArgs)
-                }
-                println("Compile time: $compileTime")
-                compileCounter++
-            } catch (err: Throwable) {
-                if (err is CancellationException) {
-                    println("Compilation cancelled")
-                    throw err
-                }
-                err.printStackTrace()
+    val scope = rememberCoroutineScope()
+    //val fileChangeCounter = fileMonitor(fileList)
+    DisposableEffect(fileList, compilerArgs) {
+        val watchService = FileSystems.getDefault().newWatchService()
+        scope.launch(Dispatchers.IO) {
+            fileList.map { it.parentFile.toPath() }.forEach {
+                it.register(watchService, StandardWatchEventKinds.ENTRY_MODIFY)
             }
+            val fileNameList = fileList.map { it.name }
+            val lastModifiedCompile = mutableMapOf<File, Long>()
+            while (isActive) {
+                try {
+                    val watchKey = watchService.take()
+                    val dirPath = watchKey.watchable() as? Path ?: break
+                    val changedFiles = watchKey.pollEvents()
+                        .map { event ->
+                            val changedFile = dirPath.resolve(event.context() as Path)
+                            println("Changed file: $changedFile event: ${event.kind()} context: ${event.context()} ${event.count()}")
+                            changedFile.toFile()
+                        }.filter { it.extension == "kt" }
+                        .filter { it.lastModified() != lastModifiedCompile[it] }
+
+                    if (changedFiles.isNotEmpty()) {
+                        //Recompile
+                        withContext(Dispatchers.Default) {
+                            try {
+                                println("Compiling changed files: ${changedFiles.joinToString { it.path }}")
+                                val compileTime = measureTime {
+                                    compilerArgs.freeArgs = changedFiles.map { it.path }
+                                    compiler.exec(messageCollector, Services.EMPTY, compilerArgs)
+                                }
+                                // Remember last modified date for compiled files
+                                changedFiles.forEach {
+                                    lastModifiedCompile[it] = it.lastModified()
+                                }
+                                println("Compile time: $compileTime")
+                                compileCounter++
+                            } catch (err: Throwable) {
+                                if (err is CancellationException) {
+                                    println("Compilation cancelled")
+                                    throw err
+                                }
+                                err.printStackTrace()
+                            }
+
+                        }
+
+                    }
+                    if (!watchKey.reset()) {
+                        watchKey.cancel()
+                        watchService.close()
+                        break
+                    }
+                } catch (err: java.nio.file.ClosedWatchServiceException) {
+                    println("Closed watch service")
+                    break
+                }
+            }
+        }
+        onDispose {
+            watchService.close()
         }
     }
     return compileCounter
