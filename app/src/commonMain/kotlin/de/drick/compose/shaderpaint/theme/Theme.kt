@@ -36,13 +36,13 @@ val logoColorDark = secondary
 val shaderBackground = backgroundVariant
 val shaderPrimary = primary
 
-private val DarkColorScheme = darkColorScheme(
+private val LightColorScheme = lightColorScheme(
     primary = Purple80,
     secondary = PurpleGrey80,
     tertiary = Pink80
 )
 
-private val LightColorScheme = lightColorScheme(
+private val DarkColorScheme = darkColorScheme(
     primary = darkPrimaryColor,
     secondary = secondary,
     tertiary = darkPrimaryColor,
@@ -56,12 +56,13 @@ private val lightCodeStyle = CodeStyle(
     function = SpanStyle(Color(0xFFBBB529)),
     comment = SpanStyle(Color(0xFF808080))
 )
+private val darkSimpleColor = Color(0xFFA9B7C6)
 private val darkCodeStyle = CodeStyle(
-    simple = SpanStyle(Color(0xFFA9B7C6)),
+    simple = SpanStyle(darkSimpleColor),
     value = SpanStyle(Color(0xFF6897BB)),
     keyword = SpanStyle(Color(0xFFCC7832)),
     punctuation = SpanStyle(Color(0xFFA1C17E)),
-    function = SpanStyle(fontStyle = FontStyle.Italic),
+    function = SpanStyle(fontStyle = FontStyle.Italic, color = darkSimpleColor),
     comment = SpanStyle(Color(0xFF808080))
 )
 
@@ -75,6 +76,7 @@ fun AppTheme(
         darkTheme -> DarkColorScheme
         else -> LightColorScheme
     }
+
     val codeStyle = if (darkTheme) darkCodeStyle else lightCodeStyle
     CompositionLocalProvider(LocalCodeStyle provides codeStyle) {
         MaterialTheme(

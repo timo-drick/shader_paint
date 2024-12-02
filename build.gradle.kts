@@ -5,6 +5,7 @@ plugins {
     kotlin("plugin.serialization") version Versions.kotlin
     //id("com.google.devtools.ksp") version "2.0.21-1.0.28"
     id("com.github.ben-manes.versions") version Versions.benManesPlugin
+    kotlin("jvm") version Versions.kotlin apply false
 }
 
 fun isNonStable(version: String): Boolean {

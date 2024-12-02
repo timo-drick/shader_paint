@@ -1,3 +1,5 @@
+
+
 package de.drick.compose.shaderpaint
 
 import androidx.compose.foundation.gestures.detectDragGestures
@@ -30,9 +32,17 @@ import androidx.compose.ui.input.pointer.PointerInputChange
 import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
+import de.drick.compose.hotpreview.HotPreview
+import de.drick.compose.shaderpaint.theme.AppTheme
 import org.jetbrains.skia.RuntimeEffect
 import org.jetbrains.skia.RuntimeShaderBuilder
 
+@Composable
+fun Preview() {
+    AppTheme {
+        MainScreen(persistentWorld)
+    }
+}
 
 //@HotReload
 @Composable
@@ -57,6 +67,7 @@ fun MainScreen(
                     modifier = Modifier.weight(1f).fillMaxHeight()
                         .pointerHoverIcon(pointerIcon),
                     world = world,
+                    selected = shapeSelected,
                     onClick = { offset ->
                         newShapeSelected.let { shape ->
                             if (shape == null) {
@@ -107,9 +118,11 @@ fun MainScreen(
                     }
                 }
             }
-
+            val shaderCodeSource = remember(world.frameCounter) {
+                world.generateShader()
+            }
             ShaderCodePanel(
-                world = world,
+                source = shaderCodeSource,
                 modifier = Modifier.height(300.dp).fillMaxWidth()
             )
         }
@@ -120,6 +133,7 @@ fun MainScreen(
 fun ShaderPanel(
     world: World,
     onClick: (Offset) -> Unit,
+    selected: Shape?,
     modifier: Modifier = Modifier,
 ) {
     var mouseOffset by remember { mutableStateOf(Offset.Zero) }
@@ -132,21 +146,37 @@ fun ShaderPanel(
         .pointerInput(Unit) {
             detectTapGestures(onTap = onClick)
         }
-        .pointerInput(Unit) {
-            var dragPos = Offset.Zero
-            var dragTarget: Shape? = null
-            detectDragGestures(
-                onDragStart = { offset ->
-                    dragTarget = world.searchShape(offset)
-                    dragPos = offset
-                },
-                onDrag = { change: PointerInputChange, dragAmount: Offset ->
-                    dragPos += dragAmount
-                    mouseOffset = dragPos
-                    dragTarget?.let { it.position = dragPos }
-                    world.invalidate()
-                }
-            )
+        .pointerInput(selected) {
+            if (selected != null) {
+                var dragPos = Offset.Zero
+                var dragTarget: Shape? = null
+                detectDragGestures(
+                    onDragStart = { offset ->
+                        val shape = world.searchShape(offset)
+                        if (shape == selected) {
+                            dragTarget = shape
+                            dragPos = offset
+                        } else {
+                            dragTarget = null
+                            if (shape != null) {
+                                onClick(offset)
+                            }
+                        }
+                    },
+                    onDrag = { change: PointerInputChange, dragAmount: Offset ->
+                        dragPos += dragAmount
+                        mouseOffset = dragPos
+                        dragTarget?.let { it.position = dragPos }
+                        world.invalidate()
+                    },
+                    onDragEnd = {
+
+                    },
+                    onDragCancel = {
+
+                    }
+                )
+            }
         }.drawWithCache {
             val shader = RuntimeShaderBuilder(effect)
                 .apply {

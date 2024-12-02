@@ -34,7 +34,7 @@ kotlin {
         //val androidMain by getting
 
         commonMain.dependencies {
-
+            implementation(project(":hot_preview"))
             implementation("com.github.skydoves:colorpicker-compose:1.1.2")
 
             //implementation(compose.components.resources)
@@ -46,6 +46,7 @@ kotlin {
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
             //implementation(compose.components.resources)
+            implementation(compose.runtime)
             implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0")
             implementation("org.jetbrains.kotlinx:kotlinx-coroutines-swing:1.9.0") //Needed because of the colorpicker dependency
         }

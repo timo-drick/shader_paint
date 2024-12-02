@@ -9,6 +9,8 @@ import androidx.compose.ui.graphics.Color
 import kotlin.math.pow
 import kotlin.math.roundToInt
 
+val persistentWorld = World()
+
 fun Offset.toVector() = "vec2(${x.roundTo(3)}, ${y.roundTo(3)})"
 
 fun Float.roundTo(numFractionDigits: Int) =

@@ -20,3 +20,6 @@ dependencyResolutionManagement {
 }
 
 include(":app")
+include(":hot_preview_annotation")
+include(":hot_preview")
+include(":hot_reload")
