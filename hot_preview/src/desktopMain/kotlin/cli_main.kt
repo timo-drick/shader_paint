@@ -39,6 +39,7 @@ fun startHotPreview(
         if (hotPreviewFile != null) {
             val reloadState = hotReloadPreview(
                 hotPreviewFile = hotPreviewFile,
+                kotlinFiles = kotlinFileList,
                 cfgRuntimeFolder = runtimeFolder
             )
             val instance = reloadState.hotReloadInstance

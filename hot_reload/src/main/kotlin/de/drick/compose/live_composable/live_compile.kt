@@ -54,6 +54,7 @@ class HotPreviewState {
 @Composable
 fun hotReloadPreview(
     hotPreviewFile: HotPreviewFile,
+    kotlinFiles: List<File>,
     cfgRuntimeFolder: String,
     cfgJvmTarget: String = "17"
 ): HotPreviewState {
@@ -63,7 +64,7 @@ fun hotReloadPreview(
     val isSystemInDarkTheme = isSystemInDarkTheme()
 
     val compileCounter = hotReloadCompile(
-        fileList = hotPreviewFile.fileList,
+        fileList = kotlinFiles,
         cfgJvmTarget = cfgJvmTarget,
         cfgRuntimeFolder = cfgRuntimeFolder
     )
@@ -151,6 +152,7 @@ fun hotReloadCompile(
             noOptimize = true
             noOptimizedCallableReferences = true
             reportPerf = false
+            incrementalCompilation = true
         }
     }
     val compiler = remember {
@@ -166,6 +168,7 @@ fun hotReloadCompile(
             }
             val fileNameList = fileList.map { it.name }
             val lastModifiedCompile = mutableMapOf<File, Long>()
+            var firstRun = true
             while (isActive) {
                 try {
                     val watchKey = watchService.take()
@@ -184,7 +187,11 @@ fun hotReloadCompile(
                             try {
                                 println("Compiling changed files: ${changedFiles.joinToString { it.path }}")
                                 val compileTime = measureTime {
-                                    compilerArgs.freeArgs = changedFiles.map { it.path }
+                                    if (firstRun) {
+                                        firstRun = false // compile all files
+                                    } else {
+                                        compilerArgs.freeArgs = changedFiles.map { it.path }
+                                    }
                                     compiler.exec(messageCollector, Services.EMPTY, compilerArgs)
                                 }
                                 // Remember last modified date for compiled files
