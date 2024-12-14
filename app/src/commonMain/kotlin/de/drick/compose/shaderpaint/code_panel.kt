@@ -25,13 +25,16 @@ import de.drick.compose.shaderpaint.theme.AppTheme
 import de.drick.compose.shaderpaint.theme.codeStyle
 import kotlin.text.Regex.Companion.fromLiteral
 
-
-private val sampleCode = """
+@HotPreview("Dark", darkMode = true, fontScale = 1f)
+@HotPreview(name = "Normal", darkMode = false)
+@Composable
+private fun PreviewShaderCodePanel() {
+    val sampleCode = """
         float dCircle(in vec2 p, in float r, in float sharpness) {
             float d = length(p) - r + sharpness;
             return smoothstep(sharpness, 0.0, d);
         }
-        // Tes
+        
         vec4 main(vec2 fragCoord) {
             vec2 p = fragCoord;
             vec3 c = vec3(0.0);
@@ -41,10 +44,6 @@ private val sampleCode = """
         }
     """.trimIndent()
 
-@HotPreview("Dark", darkMode = true, fontScale = 1.5f,widthDp = 1200)
-//@HotPreview(name = "Normal", darkMode = false, widthDp = 300, heightDp = 400)
-@Composable
-fun PreviewShaderCodePanel() {
     AppTheme {
         Surface {
             ShaderCodePanel(
@@ -55,6 +54,7 @@ fun PreviewShaderCodePanel() {
     }
 }
 
+@HotPreview(widthDp = 400, heightDp = 300)
 @Composable
 fun PreviewShaderCodePanel2() {
     val sampleCode = """
@@ -91,7 +91,7 @@ fun ShaderCodePanel(
                     Row() {
                         LineNumber(
                             number = index.toString(),
-                            modifier = Modifier.width(40.dp)
+                            modifier = Modifier.width(50.dp)
                         )
                         Text(
                             text = codeString(line),

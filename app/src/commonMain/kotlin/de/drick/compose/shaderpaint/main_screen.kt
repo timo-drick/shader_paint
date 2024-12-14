@@ -37,14 +37,14 @@ import de.drick.compose.shaderpaint.theme.AppTheme
 import org.jetbrains.skia.RuntimeEffect
 import org.jetbrains.skia.RuntimeShaderBuilder
 
+@HotPreview
 @Composable
 fun Preview() {
     AppTheme {
-        MainScreen(persistentWorld)
+        MainScreen(World())
     }
 }
 
-//@HotReload
 @Composable
 fun MainScreen(
     world: World

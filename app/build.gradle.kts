@@ -34,7 +34,7 @@ kotlin {
         //val androidMain by getting
 
         commonMain.dependencies {
-            implementation(project(":hot_preview"))
+            implementation(project(":hotpreview_prototype:hot_preview"))
             implementation("com.github.skydoves:colorpicker-compose:1.1.2")
 
             //implementation(compose.components.resources)

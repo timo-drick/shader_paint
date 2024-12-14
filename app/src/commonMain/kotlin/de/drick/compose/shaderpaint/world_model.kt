@@ -89,7 +89,7 @@ data class Triangle(
 class World {
     val shapeList = SnapshotStateList<Shape>()
         .apply {
-            add(Circle("Circle 1", Offset(100f, 100f), 100f))
+            //add(Circle("Circle 1", Offset(100f, 100f), 100f))
         }
 
     var frameCounter by mutableStateOf(0)

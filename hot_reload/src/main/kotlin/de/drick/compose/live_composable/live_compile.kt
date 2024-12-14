@@ -55,8 +55,7 @@ class HotPreviewState {
 fun hotReloadPreview(
     hotPreviewFile: HotPreviewFile,
     kotlinFiles: List<File>,
-    cfgRuntimeFolder: String,
-    cfgJvmTarget: String = "17"
+    cfgRuntimeFolder: String
 ): HotPreviewState {
     val hotPreviewState = remember {
         HotPreviewState()
@@ -65,7 +64,6 @@ fun hotReloadPreview(
 
     val compileCounter = hotReloadCompile(
         fileList = kotlinFiles,
-        cfgJvmTarget = cfgJvmTarget,
         cfgRuntimeFolder = cfgRuntimeFolder
     )
     LaunchedEffect(compileCounter) {
@@ -122,7 +120,6 @@ fun hotReloadPreview(
 @Composable
 fun hotReloadCompile(
     fileList: List<File>,
-    cfgJvmTarget: String,
     cfgRuntimeFolder: String
 ): Int {
     var compileCounter by remember { mutableStateOf(0 ) }
@@ -139,6 +136,7 @@ fun hotReloadCompile(
             println("Compiler plugin path: $it")
         }
         File(cfgRuntimeFolder).mkdir()
+        val targetJvmVersion = System.getProperty("java.vm.specification.version")
         K2JVMCompilerArguments().apply {
             freeArgs = fileList.map { it.path }
             destination = "$cfgRuntimeFolder/class"
@@ -147,7 +145,7 @@ fun hotReloadCompile(
             noJdk = false
             noReflect = true
             noStdlib = true
-            jvmTarget = cfgJvmTarget
+            jvmTarget = targetJvmVersion
             script = false
             noOptimize = true
             noOptimizedCallableReferences = true

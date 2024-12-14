@@ -1,11 +1,13 @@
 package shaderpaint
 
 import de.drick.compose.hot_preview.startHotPreview
+import de.drick.compose.hotpreview.SourceSet
 
 fun main() {
-    val srcList = listOf(
-        "src/commonMain/kotlin"
+    val src = SourceSet(
+        commonSrcDir = "src/commonMain/kotlin",
+        desktopSrcDir = "src/desktopMain/kotlin"
     )
     val runtimeFolder = "runtime"
-    startHotPreview(srcList, runtimeFolder)
+    startHotPreview(listOf(src), runtimeFolder)
 }
