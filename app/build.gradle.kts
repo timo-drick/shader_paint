@@ -1,11 +1,41 @@
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
+import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
+import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinMetadataTarget
 import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpackConfig
+import org.jetbrains.kotlin.gradle.targets.jvm.KotlinJvmTarget
 
 plugins {
     kotlin("multiplatform")
     kotlin("plugin.compose")
     id("org.jetbrains.compose")
 }
+
+// Define a plugin
+class HelloWorldPlugin : Plugin<Project> {
+    override fun apply(project: Project) {
+        project.tasks.register("helloWorld") {
+            group = "Example"
+            description = "Prints 'Hello, World!' to the console"
+            doLast {
+                println("Task: $name")
+                val mppExt = project.extensions.getByName("kotlin") as KotlinMultiplatformExtension
+                val jvmTarget = mppExt.targets.withType(KotlinJvmTarget::class.java)
+                println("jvm target: ${jvmTarget.names}")
+                val commonTarget = mppExt.targets.withType(KotlinMetadataTarget::class.java)
+                println("common target: ${commonTarget.names}")
+                println("Targets: ${mppExt.targets.map { it.name }}")
+                val sourceSets = mppExt.sourceSets
+                println("Source sets: ${sourceSets.names}")
+
+            }
+        }
+    }
+}
+
+
+// Apply the plugin
+apply<HelloWorldPlugin>()
+
 
 kotlin {
     @OptIn(ExperimentalWasmDsl::class)

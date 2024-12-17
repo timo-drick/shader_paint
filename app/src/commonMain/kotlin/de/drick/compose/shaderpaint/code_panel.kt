@@ -25,7 +25,7 @@ import de.drick.compose.shaderpaint.theme.AppTheme
 import de.drick.compose.shaderpaint.theme.codeStyle
 import kotlin.text.Regex.Companion.fromLiteral
 
-@HotPreview("Dark", darkMode = true, fontScale = 1f)
+@HotPreview("Dark", darkMode = true, fontScale = 1.0f)
 @HotPreview(name = "Normal", darkMode = false)
 @Composable
 private fun PreviewShaderCodePanel() {

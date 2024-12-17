@@ -46,6 +46,7 @@ fun renderMethod(
     val renderWidth = if (widthUndefined) defaultWidth.toInt() else width.toInt()
     val renderHeight = if (heightUndefined) defaultHeight.toInt() else height.toInt()
     println("Render size: $renderWidth x $renderHeight")
+    val m = method.asMethod()
     repeat(3) {
         try {
             var calculatedSize = IntSize.Zero
@@ -55,7 +56,7 @@ fun renderMethod(
                 density = density,
                 content = {
                     CompositionLocalProvider(LocalSystemTheme provides theme) {
-                        method.invoke(currentComposer, null)
+                        m.invoke(null, currentComposer, 0)
                     }
                 }
             ).use { scene ->

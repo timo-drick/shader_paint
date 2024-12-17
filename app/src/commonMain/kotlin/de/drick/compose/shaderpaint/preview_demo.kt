@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
@@ -14,39 +13,46 @@ import androidx.compose.ui.unit.dp
 import de.drick.compose.hotpreview.HotPreview
 import de.drick.compose.shaderpaint.theme.AppTheme
 
-val triangleColor = Color(0xff1d4e40)
+val colorCircle1 = Color(0xffd02c2c)
+val colorCircle2 = Color(0xff1a5a4e)
+val colorTriangle1 = Color(0xffb927bd)
 
-private val world = World().apply {
-
-    val shape = Circle(
-        id = "1",
-        position = Offset(500f,500f),
-        radius = 250f,
-        smoothness = 300f,
-        color = triangleColor
+val world = World().also { world ->
+    val circle1 = Circle(
+        id = "C1",
+        position = Offset(300f, 200f),
+        radius = 150f,
+        smoothness = 100f,
+        color = colorCircle1
     )
-    addShape(
-        shape
+    world.addShape(circle1)
+    val circle2 = Circle(
+        id = "C2",
+        position = Offset(600f, 400f),
+        radius = 200f,
+        smoothness = 100f,
+        color = colorCircle2
     )
+    world.addShape(circle2)
 }
 
-@HotPreview(widthDp = 500, heightDp = 500)
+@HotPreview(widthDp = 700, heightDp = 500)
 @Composable
-fun PreviewShaderPanel() {
+fun PreviewShader() {
     AppTheme {
         ShaderPanel(
             modifier = Modifier.fillMaxSize(),
             world = world,
-            selected = null,
-            onClick = {}
+            onClick = {},
+            selected = null
         )
     }
 }
 
-@HotPreview(name = "dark", darkMode = true, fontScale = 1.5f)
+//@HotPreview(name = "Normal", fontScale = 0.8f)
 @HotPreview(name = "light", darkMode = false)
 @Composable
-fun PreviewDemoCodePanel() {
+fun PreviewCode() {
     AppTheme {
         Surface {
             ShaderCodePanel(

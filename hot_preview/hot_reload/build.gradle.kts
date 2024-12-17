@@ -9,7 +9,7 @@ plugins {
 }*/
 
 dependencies {
-    implementation(project(":hot_preview_annotation"))
+    implementation(project(":hot_preview:annotation"))
 
     implementation(compose.desktop.common)
     implementation(compose.runtime)

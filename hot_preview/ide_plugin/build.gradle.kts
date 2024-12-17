@@ -12,7 +12,7 @@ kotlin {
     sourceSets {
         val commonMain by getting {
             dependencies {
-                api(project(":hot_preview_annotation"))
+                api(project(":hot_preview:annotation"))
                 implementation(compose.runtime)
                 implementation(compose.foundation)
                 implementation(compose.ui)
@@ -25,7 +25,7 @@ kotlin {
             dependencies {
                 implementation(compose.desktop.currentOs)
                 implementation(compose.material3)
-                implementation(project(":hot_reload"))
+                implementation(project(":hot_preview:hot_reload"))
             }
         }
     }

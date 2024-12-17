@@ -49,6 +49,7 @@ class KotlinLiveCompiler(
         module: String? = null
     ) = withContext(Dispatchers.Default) {
         val compilerArgs = K2JVMCompilerArguments().apply {
+            languageVersion = "2.0"
             moduleName = module
             freeArgs = fileList.map { it.path }
             commonSources = commonSrcFileList.map { it.path }.toTypedArray()
@@ -64,6 +65,8 @@ class KotlinLiveCompiler(
             noOptimize = true
             reportPerf = false
             incrementalCompilation = false
+            disableDefaultScriptingPlugin = true
+            disableStandardScript = true
 
             multiPlatform = true
             noCheckActual = true
